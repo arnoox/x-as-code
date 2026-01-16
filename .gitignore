@@ -1,0 +1,21 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# venv
+.venv
+.python-version
+_build
+.report.json
+.vscode
+*.bkp
+
+# macOS
+.DS_Store
+
+# C++ testing
+src/Testing/

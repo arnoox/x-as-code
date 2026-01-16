@@ -1,0 +1,107 @@
+# Workflow for building and deploying the Sphinx site to GitHub Pages
+#
+name: Deploy docs to GH Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  cpp-build:
+    name: C++ Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: lukka/get-cmake@latest
+      
+      # Install lcov for coverage support
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+      
+      - name: Build C++ Project with Tests
+        working-directory: src
+        run: |
+          # Configure CMake without coverage for CI (coverage can be added later if needed)
+          cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          
+          # Build the project
+          cmake --build build --config ${{env.BUILD_TYPE}}
+      
+      - name: Run C++ Tests
+        working-directory: src/build
+        run: |
+          # Run tests with XML output
+          ./eac_test --gtest_output=xml:test-results.xml
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: src/build/test-results.xml
+          
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    needs: cpp-build
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+      
+      - name: Download Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: src/build
+      
+      - name: Install System Dependencies
+        run: sudo apt-get update && sudo apt-get install -y graphviz plantuml
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      
+      - name: Install Python dependencies
+        run: uv sync
+      
+      - name: Build Sphinx Documentation
+        run: uv run sphinx-build -b html docs docs/_build/html 
+      
+      - name: Upload Documentation Artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/_build/html
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
