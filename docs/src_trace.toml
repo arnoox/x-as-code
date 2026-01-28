@@ -7,7 +7,7 @@ remote_url_field = "remote-url" # Need's field name for remote URL
 
 
 [codelinks.projects.eac-cpp]
-remote_url_pattern = "https://github.com/useblocks/eac/blob/{commit}/{path}#L{line}" # URL pattern for remote source code
+remote_url_pattern = "https://github.com/useblocks/x-as-code/blob/{commit}/{path}#L{line}" # URL pattern for remote source code
 
 [codelinks.projects.eac-cpp.source_discover]
 src_dir = "../src" # Relative path from this TOML config to the source directory
