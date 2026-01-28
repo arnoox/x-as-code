@@ -597,8 +597,7 @@ between your needs:
 
       We use ``:engine: graphviz`` here because Graphviz is easier to
       set up (no Java required). For more advanced diagrams and
-      additional directives like ``needsequence`` or ``needuml``, see
-      :ref:`tutorial-plantuml-setup`.
+      additional directives like ``needsequence`` or ``needuml``.
 
    Specifications Matrix
    ---------------------
